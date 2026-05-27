@@ -1,0 +1,67 @@
+{
+	"name": "@natski/simple-canvas",
+	"version": "0.1.0",
+	"description": "Simplifying and linking all JS canvas API types into one library.",
+	"keywords": [
+		"simple-canvas",
+		"canvas-library",
+		"visualization",
+		"canvas"
+	],
+	"module": "./dist/simple-canvas.esm.js",
+	"main": "./dist/simple-canvas.cjs.js",
+	"exports": {
+		"import": "./dist/simple-canvas.esm.js",
+		"require": "./dist/simple-canvas.cjs.js"
+	},
+	"unpkg": "./dist/simple-canvas.min.js",
+	"jsdelivr": "./dist/simple-canvas.min.js",
+	"homepage": "https://natski.dev/simple/simple-canvas",
+	"scripts": {
+		"build": "rollup -c",
+		"test": "echo \"Error: no test specified yet\"",
+		"prepare": "husky install"
+	},
+	"husky": {
+		"hooks": {
+			"pre-commit": "lint-staged"
+		}
+	},
+	"lint-staged": {
+		"*.{js,json,md}": [
+			"prettier --write",
+			"eslint --fix"
+		]
+	},
+	"author": "Natski",
+	"license": "(MIT OR Apache-2.0)",
+	"type": "module",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/natspooky/SimpleCanvas.git"
+	},
+	"files": [
+		"dist"
+	],
+	"include": [
+		"dist"
+	],
+	"exclude": [
+		"node_modules",
+		"src",
+		"test",
+		".husky"
+	],
+	"devDependencies": {
+		"@eslint/js": "^9.39.4",
+		"@rollup/plugin-terser": "^1.0.0",
+		"eslint": "^9.39.4",
+		"eslint-config-prettier": "^10.1.8",
+		"eslint-plugin-prettier": "^5.5.5",
+		"globals": "^17.6.0",
+		"husky": "^8.0.0",
+		"lint-staged": "^16.4.0",
+		"prettier": "^3.8.3",
+		"rollup": "^2.80.0"
+	}
+}
