@@ -1,11 +1,6 @@
-import SimpleCanvas2D from './simple-canvas-2d.js';
-import SimpleCanvasWebGL from './simple-canvas-webgl.js';
-import SimpleCanvasWebGPU from './simple-canvas-webgpu.js';
-import SimpleCanvasManager from './simple-canvas-manager.js';
+import Canvas2D from './2d.js';
+import CanvasWebGL from './webgl.js';
+import CanvasWebGPU from './webgpu.js';
+import CanvasManager from './manager.js';
 
-export {
-	SimpleCanvas2D,
-	SimpleCanvasWebGL,
-	SimpleCanvasWebGPU,
-	SimpleCanvasManager,
-};
+export { Canvas2D, CanvasWebGL, CanvasWebGPU, CanvasManager };

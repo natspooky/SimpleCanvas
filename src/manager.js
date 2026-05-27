@@ -1,3 +1,3 @@
-class SimpleCanvasManager {}
+class Manager {}
 
-export default SimpleCanvasManager;
+export default Manager;

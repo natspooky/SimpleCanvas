@@ -1,5 +1,5 @@
-import SimpleCanvasCore from './core.js';
+import CanvasCore from './core.js';
 
-class SimpleCanvasWebGL extends SimpleCanvasCore {}
+class CanvasWebGL extends CanvasCore {}
 
-export default SimpleCanvasWebGL;
+export default CanvasWebGL;

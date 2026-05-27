@@ -1,5 +1,5 @@
-class SimpleCanvasCore {
+class CanvasCore {
 	constructor() {}
 }
 
-export default SimpleCanvasCore;
+export default CanvasCore;

@@ -1,5 +1,5 @@
-import SimpleCanvasCore from './core.js';
+import Core from './core.js';
 
-class SimpleCanvas2D extends SimpleCanvasCore {}
+class Canvas2D extends Core {}
 
-export default SimpleCanvas2D;
+export default Canvas2D;
