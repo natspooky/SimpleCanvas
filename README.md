@@ -1,11 +1,13 @@
 # SimpleCanvas [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 
+Simple canvas is a lightweight, dependency free package to simplify the use of the JS Canvas API. This package combines each rendering context (2D, WebGL, WebGPU) into one clean managed solution.
+
 ## Installation
 
 Install via npm:
 
 ```bash
-npm install simple-canvas
+npm install @natski/simple-canvas
 ```
 
 Import into your file:
