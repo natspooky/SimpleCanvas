@@ -20,7 +20,8 @@
 	"scripts": {
 		"build": "rollup -c",
 		"test": "echo \"Error: no test specified yet\"",
-		"prepare": "husky install && npm run build"
+		"prepare": "husky install && npm run build",
+		"lint": "eslint --fix"
 	},
 	"husky": {
 		"hooks": {

@@ -18,6 +18,6 @@ export default defineConfig([
 			'prettier/prettier': 'error',
 			semi: ['warn', 'always'],
 		},
-		ignores: ['*.json', 'README.md', 'package-lock.json'],
+		ignores: ['*.json', 'README.md', 'package-lock.json', 'dist/*'],
 	},
 ]);
