@@ -1,6 +1,6 @@
 {
 	"name": "@natski/simple-canvas",
-	"version": "0.1.0",
+	"version": "0.1.1",
 	"description": "Simplifying and linking all JS canvas API types into one library.",
 	"keywords": [
 		"simple-canvas",
