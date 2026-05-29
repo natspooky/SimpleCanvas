@@ -640,6 +640,313 @@ class CanvasCore {
 		});
 	}
 
+	_contextLost(event) {
+		event.preventDefault();
+
+		this._drawingState.drawing = false;
+
+		this._userEventListeners['contextlost']?.(event);
+	}
+
+	_contextRestored(event) {
+		this._userEventListeners['contextrestored']?.(event);
+	}
+
+	_pageBlur() {
+		if (this.settings.pauseOnBlur) this._drawingState.paused = true;
+
+		if (this.settings.key.active) {
+			this._keyState = {
+				pressing: false,
+				pressCount: 0,
+				currentKeys: {},
+			};
+		}
+
+		if (this.settings.cursor.active) {
+			this._mouseState.pressing = false;
+			this._mouseState.covering = false;
+		}
+
+		if (this.settings.useScroll)
+			this._scrollState = {
+				scrolling: false,
+			};
+
+		if (this.settings.useWheel)
+			this._wheelState = {
+				scrolling: false,
+			};
+	}
+
+	_pageFocus() {
+		if (this.settings.pauseOnBlur) this._drawingState.paused = false;
+	}
+
+	_intersect(entries) {
+		const canvasEntry = entries[0];
+
+		if (canvasEntry.target && canvasEntry.isIntersecting) {
+			this._drawingState.paused = false;
+		} else {
+			this._drawingState.paused = true;
+		}
+	}
+
+	_locationUpdate() {
+		const box = this._canvasState.canvas.getBoundingClientRect();
+
+		const body = document.body;
+		const docEl = document.documentElement;
+
+		const scrollTop = docEl.scrollTop || body.scrollTop;
+		const scrollLeft = docEl.scrollLeft || body.scrollLeft;
+
+		const clientTop = docEl.clientTop || body.clientTop || 0;
+		const clientLeft = docEl.clientLeft || body.clientLeft || 0;
+
+		this._canvasState.location = {
+			left: Math.round(box.left + scrollLeft - clientLeft),
+			top: Math.round(box.top + scrollTop - clientTop),
+		};
+	}
+
+	async _resize() {
+		this._sizeUpdate();
+		this._locationUpdate();
+
+		if (this.settings.setupOnResize && this.settings.autoResize)
+			await this._drawingState.setupFn?.();
+
+		this._drawingState.resizeFn?.({
+			width: this.width,
+			height: this.height,
+			top: this.top,
+			left: this.left,
+		});
+
+		if (this._drawingState.drawing && !this._drawingState.paused)
+			this.drawFrame();
+	}
+
+	_mouseDown(event) {
+		if (!this._mouseState.covering && !this.settings.cursor.global) return;
+		if (!this.settings.cursor.passive) event.preventDefault();
+
+		this._mouseState.pressing = true;
+
+		this._mouseState.click.startPosition = this._mouseState.motion.position;
+
+		this._userEventListeners['mousedown']?.(event);
+	}
+
+	_mouseUp(event) {
+		if (!this._mouseState.pressing) return;
+
+		this._mouseState.pressing = false;
+
+		this._mouseState.click.endPosition = this._mouseState.motion.position;
+
+		this._userEventListeners['mouseup']?.(event);
+	}
+
+	_mouseMove(event) {
+		if (!this._mouseState.covering && !this.settings.cursor.global) return;
+
+		this._mouseState.motion.lastPostion = this._mouseState.motion.position;
+
+		clearTimeout(this._timers.cursorMotionState);
+
+		this._mouseState.moving = true;
+
+		const matrix = this.settings.cursor.correctTransform
+			? this._canvasState.context.getTransform().inverse()
+			: new DOMMatrixReadOnly();
+
+		let nonRelativeCursorPos;
+
+		if (!this._canvasState.size.locked) {
+			const retina = this.retinaScale;
+
+			nonRelativeCursorPos = new DOMPointReadOnly(
+				(event.pageX - this._canvasState.location.left) * retina,
+				(event.pageY - this._canvasState.location.top) * retina,
+			);
+		} else {
+			nonRelativeCursorPos = new DOMPointReadOnly(
+				(this._canvasState.size.width /
+					this._canvasState.elementSize.width) *
+					(event.pageX - this._canvasState.location.left),
+				(this._canvasState.size.height /
+					this._canvasState.elementSize.height) *
+					(event.pageY - this._canvasState.location.top),
+			);
+		}
+
+		const relativeCursorPos = nonRelativeCursorPos.matrixTransform(matrix);
+
+		this._mouseState.motion.position.x = relativeCursorPos.x;
+		this._mouseState.motion.position.y = relativeCursorPos.y;
+
+		const time = performance.now() - this._mouseState.motion.lastEntryTime;
+
+		//velocity code
+		this._mouseState.motion.velocity.x =
+			(this._mouseState.motion.lastPostion.x -
+				this._mouseState.motion.position.x) /
+			time;
+
+		this._mouseState.motion.velocity.y =
+			(this._mouseState.motion.lastPostion.y -
+				this._mouseState.motion.position.y) /
+			time;
+
+		//speed code
+		this._mouseState.motion.speed = this._pythag(
+			this._mouseState.motion.velocity.x,
+			this._mouseState.motion.velocity.y,
+		);
+
+		this._mouseState.motion.lastEntryTime = performance.now();
+
+		//reset the motion of the cursor when the mouse stops moving
+		this._timers.cursorMotionState = setTimeout(() => {
+			this._mouseState.moving = false;
+			this._mouseState.motion.velocity = {
+				x: 0,
+				y: 0,
+			};
+			this._mouseState.motion.speed = 0;
+		}, 10);
+
+		this._userEventListeners['mousemove']?.(event);
+	}
+
+	_contextMenu(event) {
+		if (this._mouseState.covering) event.preventDefault();
+
+		this._userEventListeners['contextmenu']?.(event);
+	}
+
+	_mouseEnter(event) {
+		this._mouseState.covering = true;
+
+		this._userEventListeners['mouseenter']?.(event);
+	}
+
+	_mouseLeave(event) {
+		this._mouseState.covering = false;
+
+		this._userEventListeners['mouseleave']?.(event);
+	}
+
+	_touchStart(event) {
+		this._touchState.touching = true;
+
+		this._touchState.touchCount++;
+
+		this._userEventListeners['touchstart']?.(event);
+	}
+
+	_touchEnd(event) {
+		this._touchState.touchCount--;
+
+		if (this._touchState.touchCount <= 0) this._touchState.touching = true;
+
+		this._userEventListeners['touchend']?.(event);
+	}
+
+	_touchMove(event) {
+		clearTimeout(this._timers.cursorMotionState);
+
+		this._touchState.moving = true;
+
+		this._timers.cursorMotionState = setTimeout(() => {
+			this._touchState.moving = false;
+		}, 10);
+
+		this._userEventListeners['touchmove']?.(event);
+	}
+
+	_touchCancel(event) {
+		this._userEventListeners['touchcancel']?.(event);
+	}
+
+	_keyDown(event) {
+		if (this._keyState.currentKeys[event.key]) return;
+
+		if (!this.settings.key.passive) event.preventDefault();
+
+		this._keyState.pressing = true;
+
+		this._keyState.currentKeys[event.key] = true;
+
+		this._keyState.pressCount++;
+
+		this._userEventListeners['keydown']?.(event);
+	}
+
+	_keyUp(event) {
+		if (!this._keyState.currentKeys[event.key]) return;
+
+		delete this._keyState.currentKeys[event.key];
+
+		this._keyState.pressCount--;
+
+		if (this._keyState.pressCount <= 0) this._keyState.pressing = false;
+
+		this._userEventListeners['keyup']?.(event);
+	}
+
+	_wheel(event) {
+		//maybe get rid of this or add a settings
+		event.preventDefault();
+
+		clearTimeout(this._timers.wheelMotionState);
+
+		this._wheelState.scrolling = true;
+
+		this._timers.wheelMotionState = setTimeout(() => {
+			this._wheelState.scrolling = false;
+		}, 10);
+
+		this._userEventListeners['wheel']?.(event);
+	}
+
+	_scroll(event) {
+		clearTimeout(this._timers.wheelMotionState);
+
+		this._scrollState.scrolling = true;
+
+		this._timers.wheelMotionState = setTimeout(() => {
+			this._scrollState.scrolling = false;
+		}, 10);
+
+		this._userEventListeners['scroll']?.(event);
+	}
+
+	// canvas body data update functions
+
+	_sizeUpdate() {
+		this._canvasState.elementSize.width =
+			this._canvasState.canvas.offsetWidth;
+		this._canvasState.elementSize.height =
+			this._canvasState.canvas.offsetHeight;
+
+		if (!this._canvasState.size.locked) {
+			const retina = this.retinaScale;
+			this._canvasState.size.width = Math.floor(
+				this._canvasState.elementSize.width * retina,
+			);
+			this._canvasState.size.height = Math.floor(
+				this._canvasState.elementSize.height * retina,
+			);
+		}
+
+		this._canvasState.canvas.width = this._canvasState.size.width;
+		this._canvasState.canvas.height = this._canvasState.size.height;
+	}
+
 	get element() {
 		return this._canvasState.canvas;
 	}

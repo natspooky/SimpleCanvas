@@ -34,6 +34,8 @@ class Canvas2D extends CanvasCore {
 		context.restore();
 	}
 
+	_diagnostics() {}
+
 	draw() {
 		if (this.settings.autoClear) this.clear();
 
@@ -41,8 +43,6 @@ class Canvas2D extends CanvasCore {
 
 		if (this.settings.diagnostics) this._diagnostics();
 	}
-
-	_diagnostics() {}
 
 	clear() {
 		this._transformlessWrapper((ctx) => {
